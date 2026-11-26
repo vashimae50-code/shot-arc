@@ -25,27 +25,30 @@ export async function openStore(idb = globalThis.indexedDB) {
 
   const all = async (store) => req2p(db.transaction(store).objectStore(store).getAll());
 
-  // 1本の動画を消し、shot の clipId を空にする（同じトランザクションで）
-  async function removeClips(pred) {
+  // 同じトランザクションの中では await をはさまず、コールバックで続ける（古いSafariで途中で閉じないように）
+  function updateShots(pred, change) {
+    const tx = db.transaction('shots', 'readwrite');
+    const st = tx.objectStore('shots');
+    st.getAll().onsuccess = (e) => { for (const s of e.target.result) if (pred(s)) st.put({ ...s, ...change(s) }); };
+    return tx2p(tx);
+  }
+
+  // 動画を消し、shot の clipId を空にする（同じトランザクションで）
+  function removeClips(pred) {
     const tx = db.transaction(['shots', 'clips'], 'readwrite');
     const shots = tx.objectStore('shots');
     const clips = tx.objectStore('clips');
-    const list = await req2p(shots.getAll());
-    for (const s of list) {
-      if (s.clipId == null || !pred(s)) continue;
-      clips.delete(s.clipId);
-      shots.put({ ...s, clipId: null });
-    }
-    await tx2p(tx);
+    shots.getAll().onsuccess = (e) => {
+      for (const s of e.target.result) {
+        if (s.clipId == null || !pred(s)) continue;
+        clips.delete(s.clipId);
+        shots.put({ ...s, clipId: null });
+      }
+    };
+    return tx2p(tx);
   }
 
-  async function patchShot(id, patch) {
-    const tx = db.transaction('shots', 'readwrite');
-    const st = tx.objectStore('shots');
-    const s = await req2p(st.get(id));
-    if (s) st.put({ ...s, ...patch(s) });
-    await tx2p(tx);
-  }
+  const patchShot = (id, patch) => updateShots((s) => s.id === id, patch);
 
   return {
     async addSession({ player, calib }) {
@@ -59,12 +62,14 @@ export async function openStore(idb = globalThis.indexedDB) {
       return id;
     },
 
-    async endSession(id) {
+    endSession(id) {
       const tx = db.transaction('sessions', 'readwrite');
       const st = tx.objectStore('sessions');
-      const s = await req2p(st.get(id));
-      if (s && !s.endedAt) st.put({ ...s, endedAt: new Date().toISOString() });
-      await tx2p(tx);
+      st.get(id).onsuccess = (e) => {
+        const s = e.target.result;
+        if (s && !s.endedAt) st.put({ ...s, endedAt: new Date().toISOString() });
+      };
+      return tx2p(tx);
     },
 
     // 数字を先に保存し、動画は別に保存する。動画が保存できなくても数字は残る。
@@ -100,12 +105,9 @@ export async function openStore(idb = globalThis.indexedDB) {
 
     updateOutcome: (id, outcome) => patchShot(id, () => ({ outcome, outcomeEdited: true })),
 
-    async markExported(ids) {
+    markExported(ids) {
       const set = new Set(ids);
-      const tx = db.transaction('shots', 'readwrite');
-      const st = tx.objectStore('shots');
-      for (const s of await req2p(st.getAll())) if (set.has(s.id)) st.put({ ...s, exported: true });
-      await tx2p(tx);
+      return updateShots((s) => set.has(s.id), () => ({ exported: true }));
     },
 
     async getClip(shotId) {
