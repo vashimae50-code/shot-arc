@@ -27,6 +27,16 @@ test('回を作り、1本を動画つきで保存して読み戻す', async () =
   assert.equal(sessions.length, 1);
 });
 
+test('数字を先に保存し、動画は後から付ける', async () => {
+  const st = await openStore(new IDBFactory());
+  const sid = await st.addSession({ player: 'とらお', calib: {} });
+  const { shotId } = await st.saveShot(shot({ sessionId: sid }), null, null);
+  assert.equal(await st.getClip(shotId), null);
+  assert.equal(await st.attachClip(shotId, clip(), meta), true);
+  const c = await st.getClip(shotId);
+  assert.equal(c.offsetS, 1.2);
+});
+
 test('動画を消しても数字は残る', async () => {
   const st = await openStore(new IDBFactory());
   const sid = await st.addSession({ player: 'とらお', calib: {} });

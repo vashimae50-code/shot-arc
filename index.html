@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="しゅーとアーク">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+<title>しゅーとアーク</title>
+</head>
+<body>
+
+<!-- 打つ人を選ぶ -->
+<section id="home" class="screen active">
+  <h1>しゅーとアーク</h1>
+  <div id="warn" class="warn hidden">かきだしていない きろくが たまっています。「きろく」から かきだしてください。</div>
+  <p class="lead">うつひとを えらんでください</p>
+  <div id="players" class="players"></div>
+  <div class="add">
+    <input id="newName" type="text" placeholder="なまえ" maxlength="12">
+    <button id="addPlayer" class="sub">ついか</button>
+  </div>
+  <div class="row">
+    <button id="toRecords" class="sub">きろく</button>
+  </div>
+</section>
+
+<!-- カメラ（位置合わせ・撮影中で共通） -->
+<section id="camera" class="screen">
+  <canvas id="view"></canvas>
+  <video id="video" playsinline muted autoplay></video>
+
+  <div id="calibBar" class="bar top">
+    <div id="calibMsg">リングを さがしています…</div>
+    <div class="row">
+      <span>うつひとは</span>
+      <button id="sideLeft" class="seg">ひだり</button>
+      <button id="sideRight" class="seg">みぎ</button>
+      <button id="retryRim" class="sub">もういちど さがす</button>
+      <button id="calibOk" class="go" disabled>OK</button>
+      <button id="calibBack" class="sub">もどる</button>
+    </div>
+  </div>
+
+  <div id="hud" class="bar bottom hidden">
+    <div id="hudShot" class="big">うってください</div>
+    <div class="row">
+      <div id="hudToday">きょう：0本</div>
+      <div id="hudFlash" class="flash"></div>
+      <button id="endLive" class="stop">おわり</button>
+    </div>
+  </div>
+</section>
+
+<!-- その回のまとめ -->
+<section id="summary" class="screen">
+  <h2>まとめ</h2>
+  <div id="sumBody" class="sum"></div>
+  <div class="row">
+    <button id="sumAgain" class="go">つづける</button>
+    <button id="sumHome" class="sub">おわる</button>
+  </div>
+</section>
+
+<!-- 記録の一覧（Task 10） -->
+<section id="records" class="screen">
+  <div class="row head">
+    <h2>きろく</h2>
+    <button id="recBack" class="sub">もどる</button>
+  </div>
+  <div id="recBody"></div>
+</section>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

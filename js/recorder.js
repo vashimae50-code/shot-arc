@@ -85,3 +85,12 @@ export class ClipRecorder {
     for (const s of this.segments) if (!s.blob && s.rec) { try { s.rec.stop(); } catch (_) { this.finish(s); } }
   }
 }
+
+// このブラウザで録画できる形式（mp4 を優先）
+export function pickMime() {
+  if (typeof MediaRecorder === 'undefined') return null;
+  for (const m of ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm']) {
+    try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (_) { /* 次を試す */ }
+  }
+  return null;
+}

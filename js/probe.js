@@ -185,6 +185,8 @@ async function run() {
 
   const s = summarizeProbe(raw);
   const out = { summary: s, raw };
+  // 本番の画面（index.html）が録画の区切り方を決めるのに使う
+  try { localStorage.setItem('shotarc.probe', JSON.stringify(s)); } catch (_) { /* 保存できなくても続ける */ }
   const verdict = document.createElement('div');
   verdict.className = s.verdict;
   verdict.textContent = s.verdict === 'ok' ? 'けっか：つかえそうです' : `けっか：むずかしい（${s.reasons.join('、')}）`;

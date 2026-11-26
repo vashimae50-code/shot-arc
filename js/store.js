@@ -75,14 +75,19 @@ export async function openStore(idb = globalThis.indexedDB) {
       }));
       await tx2p(tx);
       if (!clipBlob) return { shotId, clipSaved: false };
+      return { shotId, clipSaved: await this.attachClip(shotId, clipBlob, clipMeta) };
+    },
+
+    // 動画を後から付ける。保存できなければ false（数字はそのまま）
+    async attachClip(shotId, clipBlob, clipMeta) {
       try {
         const tx2 = db.transaction('clips', 'readwrite');
         const clipId = await req2p(tx2.objectStore('clips').add({ shotId, blob: clipBlob, ...clipMeta }));
         await tx2p(tx2);
         await patchShot(shotId, () => ({ clipId }));
-        return { shotId, clipSaved: true };
+        return true;
       } catch (_) {
-        return { shotId, clipSaved: false };
+        return false;
       }
     },
 
