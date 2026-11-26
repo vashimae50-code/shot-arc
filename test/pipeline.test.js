@@ -29,6 +29,18 @@ test('合成した動画から1本を見つけ、入射角と はいった を�
   assert.equal(r.outcome, 'make');
 });
 
+test('flush で、見失う前に終わった軌道も閉じる', () => {
+  const { calib, points } = makeTrack();
+  const k = 320 / 1280;
+  const pipe = new Pipeline(calib, { procWidth: 320, srcWidth: 1280 });
+  let n = 0;
+  for (const p of points) {
+    n += pipe.processFrame(p.t, fillCircle(blankImage(320, 180), p.x * k, p.y * k, pipe.calib.ballRpx)).length;
+  }
+  assert.equal(n, 0);
+  assert.equal(pipe.flush(1.0).length, 1);
+});
+
 test('srcWidth を省くと、位置合わせはそのまま処理画像の座標とみなす', () => {
   const { calib } = makeTrack();
   const pipe = new Pipeline(calib, { procWidth: 320 });

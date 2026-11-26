@@ -63,6 +63,17 @@ test('手前を通ると てまえ、奥を通ると おく', () => {
   within(mb.depthCm, 37.5, 1.0, '奥'); assert.equal(mb.depthLabel, 'おく');
 });
 
+test('リングに当たってゆっくり上がる点も当てはめに使わない', () => {
+  const { calib, points } = makeTrack({ vx: -2.7 });
+  const last = points[points.length - 1];
+  // 最後の点をリングの高さのわずか上にして、はね返りを1コマ3画素ずつ（ボール半径の半分より小さい）
+  const pts = [...points.slice(0, -1), { ...last, y: last.y - 0.5 }];
+  const after = [1, 2, 3, 4, 5, 6].map((k) => ({ t: last.t + k / 30, x: last.x + k * 5, y: last.y - 0.5 - k * 3 }));
+  const m = measureShot(calib, [...pts, ...after]);
+  assert.equal(m.quality, 'ok');
+  within(m.entryAngleDeg, 56.0, 1.0, '入射角'); // atan(4.0/2.7)
+});
+
 test('リングに当たった後の点は当てはめに使わない', () => {
   const { calib, points } = makeTrack();
   // 通過後にリングではね返って上がる点を足す

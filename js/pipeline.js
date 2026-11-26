@@ -15,15 +15,22 @@ export class Pipeline {
     this.prev = null;
   }
 
+  // 撮影を終えたときなど、追っている線をすべて閉じて結果を返す
+  flush(t) {
+    return this.segmenter.push(t + 1, []).map((track) => this.result(track));
+  }
+
+  result(track) {
+    const metrics = measureShot(this.calib, track.points);
+    return { track, metrics, outcome: judgeOutcome(this.calib, track.points, metrics) };
+  }
+
   processFrame(t, img) {
     const roi = this.roi ?? { x: 0, y: 0, w: img.width, h: img.height };
     const dets = detectBall(img, this.prev, this.calib, roi);
     // 前のコマとして中身を写しておく（canvas の ImageData は使い回されることがあるため）
     this.prev = { width: img.width, height: img.height, data: new Uint8ClampedArray(img.data) };
     this.lastDets = dets;
-    return this.segmenter.push(t, dets).map((track) => {
-      const metrics = measureShot(this.calib, track.points);
-      return { track, metrics, outcome: judgeOutcome(this.calib, track.points, metrics) };
-    });
+    return this.segmenter.push(t, dets).map((track) => this.result(track));
   }
 }

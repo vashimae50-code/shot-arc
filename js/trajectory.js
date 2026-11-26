@@ -4,7 +4,9 @@ import { toWorld } from './geom.js';
 const MIN_POINTS = 8;
 const MAX_RESIDUAL_BALLS = 0.6; // 当てはめのずれの許容（ボール半径の何倍まで）
 const REACH_SLACK_S = 0.07; // 最後の点からリングの高さまで、この秒数以内なら「とどいた」とみなす
-const RISE_TOL_BALLS = 0.5; // 頂点の後でこれ以上上がったら、リングに当たったとみなす
+const RISE_TOL_BALLS = 0.5; // 頂点の後で1コマにこれ以上上がったら、リングに当たったとみなす
+const STEP_TOL_BALLS = 0.1; // 頂点から下がった後は、これだけ上がっても当たったとみなす
+const BELOW_APEX_BALLS = 1.0; // 「頂点から十分に下がった」の目安
 const HALF_RIM_M = 0.225;
 
 function unmeasured(reason, nPoints) {
@@ -20,7 +22,10 @@ function selectFlight(world, riseTol) {
   for (let i = 1; i < world.length; i++) if (world[i].y > world[apex].y) apex = i;
   for (let k = apex + 1; k < world.length; k++) {
     if (world[k].y <= 0) return world.slice(0, k + 1);
-    if (world[k].y > world[k - 1].y + riseTol) return world.slice(0, k);
+    // 頂点から十分に下がった後で上向きに変わったら、リングかボードに当たった
+    const wellBelowApex = world[k - 1].y < world[apex].y - riseTol.belowApex;
+    if (wellBelowApex && world[k].y > world[k - 1].y + riseTol.step) return world.slice(0, k);
+    if (world[k].y > world[k - 1].y + riseTol.big) return world.slice(0, k);
   }
   return world;
 }
@@ -63,7 +68,9 @@ function fitMotion(pts) {
 export function measureShot(calib, points) {
   const world = points.map((p) => ({ t: p.t, ...toWorld(calib, p) }));
   const ballR = calib.ballRpx * calib.mPerPx;
-  const used = selectFlight(world, RISE_TOL_BALLS * ballR);
+  const used = selectFlight(world, {
+    big: RISE_TOL_BALLS * ballR, step: STEP_TOL_BALLS * ballR, belowApex: BELOW_APEX_BALLS * ballR,
+  });
   const nPoints = used.length;
   if (nPoints < MIN_POINTS) return unmeasured('てんがすくない', nPoints);
 
