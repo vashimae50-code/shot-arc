@@ -1,0 +1,13 @@
+{
+  "name": "shot-arc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "iPadのSafariでシュートの軌道を測るWebアプリ",
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0"
+  }
+}
