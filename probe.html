@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="しょっとチェック">
+<title>iPadチェック（シュート軌道アプリ）</title>
+<style>
+  body { font-family: -apple-system, "Hiragino Sans", sans-serif; margin: 16px; background: #f4f7fb; color: #123; }
+  h1 { font-size: 22px; }
+  button { font-size: 20px; padding: 12px 24px; margin: 8px 8px 8px 0; border-radius: 10px; border: none; background: #0040a0; color: #fff; }
+  button:disabled { background: #9ab; }
+  #log { font-size: 16px; line-height: 1.6; }
+  pre { background: #fff; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 13px; }
+  video, canvas { width: 320px; height: 180px; background: #000; margin: 4px; }
+  .ok { color: #070; font-weight: bold; } .ng { color: #b00; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>iPadチェック</h1>
+<p>ホーム画面に追加してから開き、「はじめる」をおしてください。1分ほどかかります。カメラの許可を聞かれたら「許可」をおしてください。</p>
+<button id="start">はじめる</button>
+<button id="copy" disabled>けっかをコピー</button>
+<div id="log"></div>
+<div><video id="v" playsinline muted></video><canvas id="c" width="640" height="360"></canvas></div>
+<pre id="out"></pre>
+<script type="module" src="js/probe.js"></script>
+</body>
+</html>
