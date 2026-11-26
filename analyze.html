@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>どうがで かいせき（PC用）</title>
+<style>
+  body { font-family: "Meiryo UI", -apple-system, sans-serif; margin: 16px; color: #123; background: #f4f7fb; }
+  #stage { position: relative; display: inline-block; }
+  canvas { max-width: 100%; border: 1px solid #b8c5d9; cursor: crosshair; }
+  button, select { font-size: 16px; padding: 6px 14px; margin: 4px; }
+  table { border-collapse: collapse; margin-top: 12px; background: #fff; }
+  th, td { border: 1px solid #b8c5d9; padding: 4px 8px; font-size: 14px; }
+  th { background: #dce6f4; }
+  #msg { margin: 8px 0; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>どうがで かいせき（PC用）</h1>
+<p>① どうがをえらぶ → ② リングの左はし・右はしをクリック（自動で見つかればそのまま）→ ③ うつ人のいる側をえらぶ → ④「かいせき」</p>
+<input type="file" id="file" accept="video/*">
+<select id="side"><option value="right">うつ人は 右</option><option value="left">うつ人は 左</option></select>
+<button id="run" disabled>かいせき</button>
+<button id="csv" disabled>CSVをほぞん</button>
+<div id="msg"></div>
+<div id="stage"><canvas id="view"></canvas></div>
+<video id="video" muted playsinline style="display:none"></video>
+<table id="tbl"><thead><tr><th>#</th><th>じこく</th><th>けっか</th><th>にゅうしゃかく</th><th>つうか</th><th>さいこうてん</th><th>コマ</th></tr></thead><tbody></tbody></table>
+<script type="module" src="js/analyze.js"></script>
+</body>
+</html>
