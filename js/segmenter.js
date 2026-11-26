@@ -6,6 +6,7 @@ const MIN_POINTS = 6;
 const MAX_TRACKS = 6;
 const JUMP_RIMS = 1.2; // 1コマで動いてよい距離（リング幅の何倍）
 const TRIM_TOL_BALLS = 0.25; // 打つ前のドリブルを外すときの許容
+const GAP_S = 0.12; // 頂点より前でこれ以上点が途切れたら、そこまでは手に持っていた間とみなす
 
 export class ShotSegmenter {
   constructor(calib) {
@@ -74,7 +75,7 @@ export class ShotSegmenter {
     const tol = TRIM_TOL_BALLS * this.calib.ballRpx;
     let start = 0;
     for (let i = apex; i >= 1; i--) {
-      if (pts[i - 1].y < pts[i].y - tol) { start = i; break; }
+      if (pts[i - 1].y < pts[i].y - tol || pts[i].t - pts[i - 1].t > GAP_S) { start = i; break; }
     }
     const points = pts.slice(start);
     if (points.length < MIN_POINTS) return null;

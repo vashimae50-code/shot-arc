@@ -12,7 +12,15 @@ export class Pipeline {
     this.calib = srcWidth ? scaleCalib(calib, procWidth / srcWidth) : calib;
     this.roi = roi ?? null;
     this.segmenter = new ShotSegmenter(this.calib);
-    this.prev = null;
+    this.bg = null; // 背景（ゆっくり更新する平均の画面）
+    this.bgAlpha = 0.1;
+  }
+
+  updateBackground(img) {
+    const n = img.data.length;
+    if (!this.bg || this.bg.length !== n) { this.bg = Float32Array.from(img.data); return; }
+    const a = this.bgAlpha, bg = this.bg, d = img.data;
+    for (let i = 0; i < n; i++) bg[i] += a * (d[i] - bg[i]);
   }
 
   // 撮影を終えたときなど、追っている線をすべて閉じて結果を返す
@@ -27,9 +35,9 @@ export class Pipeline {
 
   processFrame(t, img) {
     const roi = this.roi ?? { x: 0, y: 0, w: img.width, h: img.height };
-    const dets = detectBall(img, this.prev, this.calib, roi);
-    // 前のコマとして中身を写しておく（canvas の ImageData は使い回されることがあるため）
-    this.prev = { width: img.width, height: img.height, data: new Uint8ClampedArray(img.data) };
+    const ref = this.bg ? { width: img.width, height: img.height, data: this.bg } : null;
+    const dets = detectBall(img, ref, this.calib, roi);
+    this.updateBackground(img);
     this.lastDets = dets;
     return this.segmenter.push(t, dets).map((track) => this.result(track));
   }

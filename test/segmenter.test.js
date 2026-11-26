@@ -66,3 +66,11 @@ test('打つ前のドリブルは軌道の頭から外す', () => {
   assert.equal(shots.length, 1);
   assert.ok(shots[0].points[0].t >= -0.3, `始まり ${shots[0].points[0].t}`);
 });
+
+test('手に持っていた間の点と、間が空いた後の飛行を分け、飛行だけを返す', () => {
+  const { calib, points } = makeTrack({ t0: 0, t1: 1.0 });
+  const hold = [0.4, 0.37, 0.33].map((dt) => ({ t: -dt, dets: [{ x: points[0].x + 3, y: points[0].y + 40 }] }));
+  const shots = run(new ShotSegmenter(calib), [...hold, ...empty(-0.3 + 1 / 30, -1 / 30), ...toFrames(points), ...empty(1.0 + 1 / 30, 1.6)]);
+  assert.equal(shots.length, 1);
+  assert.equal(shots[0].points[0].t, 0);
+});

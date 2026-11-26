@@ -81,3 +81,12 @@ test('リングに当たった後の点は当てはめに使わない', () => {
   const after = [1, 2, 3, 4, 5].map((k) => ({ t: last.t + k / 30, x: last.x - k * 2, y: last.y - k * 6 }));
   assertStandard(measureShot(calib, [...points, ...after]));
 });
+
+test('広角レンズ・斜めのカメラで横の動きが曲がっても測れる', () => {
+  // x = 3.75 - 3t - 0.75t²（横の速さが変わる）。通過のとき vx=-4.5, vy=-4.0 → 入射角 41.6度
+  const { calib, points } = makeTrack({ x0: 3.75, ax: -1.5 });
+  const m = measureShot(calib, points);
+  assert.equal(m.quality, 'ok');
+  within(m.entryAngleDeg, 41.6, 0.7, '入射角');
+  within(m.depthCm, 22.5, 1.5, '通過位置');
+});

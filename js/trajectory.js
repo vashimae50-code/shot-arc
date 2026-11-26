@@ -55,14 +55,16 @@ function fitMotion(pts) {
     n++; st += t; st2 += t * t; st3 += t ** 3; st4 += t ** 4;
     sx += p.x; sxt += p.x * t; sy += p.y; syt += p.y * t; syt2 += p.y * t * t;
   }
-  const den = n * st2 - st * st;
-  if (Math.abs(den) < 1e-12) return null;
-  const vx = (n * sxt - st * sx) / den;
-  const x0 = (sx - vx * st) / n;
-  const q = solve3([[n, st, st2], [st, st2, st3], [st2, st3, st4]], [sy, syt, syt2]);
-  if (!q) return null;
+  // 横も2次にする（広角レンズや斜めのカメラでは、横の動きも一定の速さに写らないため）
+  let sxt2 = 0;
+  for (const p of pts) sxt2 += p.x * (p.t - t0) ** 2;
+  const M = [[n, st, st2], [st, st2, st3], [st2, st3, st4]];
+  const qx = solve3(M, [sx, sxt, sxt2]);
+  const q = solve3(M, [sy, syt, syt2]);
+  if (!q || !qx) return null;
+  const [x0, vx, ax] = qx;
   const [y0, vy, ay] = q;
-  return { t0, x0, vx, y0, vy, ay };
+  return { t0, x0, vx, ax, y0, vy, ay };
 }
 
 export function measureShot(calib, points) {
@@ -76,7 +78,8 @@ export function measureShot(calib, points) {
 
   const f = fitMotion(used);
   if (!f) return unmeasured('てんがすくない', nPoints);
-  const X = (t) => f.x0 + f.vx * (t - f.t0);
+  const X = (t) => f.x0 + f.vx * (t - f.t0) + f.ax * (t - f.t0) ** 2;
+  const vxAt = (t) => f.vx + 2 * f.ax * (t - f.t0);
   const Y = (t) => f.y0 + f.vy * (t - f.t0) + f.ay * (t - f.t0) ** 2;
 
   let ss = 0;
@@ -92,7 +95,6 @@ export function measureShot(calib, points) {
   const tLast = used[used.length - 1].t;
   if (dt <= 0 || crossT > tLast + REACH_SLACK_S) return unmeasured('リングの高さまでとどかない', nPoints);
 
-  const speedX = Math.abs(f.vx);
   const vyAt = (t) => f.vy + 2 * f.ay * (t - f.t0);
   const deg = (r) => (r * 180) / Math.PI;
   const tApex = f.t0 - f.vy / (2 * f.ay);
@@ -101,8 +103,8 @@ export function measureShot(calib, points) {
 
   return {
     quality: 'ok',
-    entryAngleDeg: deg(Math.atan2(Math.abs(vyAt(crossT)), speedX)),
-    releaseAngleDeg: deg(Math.atan2(vyAt(f.t0), speedX)),
+    entryAngleDeg: deg(Math.atan2(Math.abs(vyAt(crossT)), Math.abs(vxAt(crossT)))),
+    releaseAngleDeg: deg(Math.atan2(vyAt(f.t0), Math.abs(vxAt(f.t0)))),
     apexM,
     depthCm,
     depthLabel: depthCm < 15 ? 'てまえ' : depthCm <= 30 ? 'まんなか' : 'おく',
@@ -110,6 +112,6 @@ export function measureShot(calib, points) {
     flightS: crossT - f.t0,
     nPoints,
     crossT,
-    fit: { x0: f.x0, vx: f.vx, y0: f.y0, vy: f.vy, ay: f.ay },
+    fit: { x0: f.x0, vx: f.vx, ax: f.ax, y0: f.y0, vy: f.vy, ay: f.ay },
   };
 }

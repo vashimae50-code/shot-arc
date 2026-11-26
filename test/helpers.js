@@ -5,14 +5,14 @@ export const BASE_CALIB = { rimX0: 555, rimX1: 645, rimY: 300, shooterSide: 'rig
 
 // 物理の軌道（m）を画素の点にする。t は t0 から fps 刻み。
 export function makeTrack({
-  x0 = 3.0, y0 = -0.9, vx = -3.0, vy = 5.8, g = 9.8, fps = 30, t0 = 0, t1 = 1.0, side = 'right', calib,
+  x0 = 3.0, y0 = -0.9, vx = -3.0, vy = 5.8, g = 9.8, ax = 0, fps = 30, t0 = 0, t1 = 1.0, side = 'right', calib,
 } = {}) {
   const c = calib ?? makeCalib({ ...BASE_CALIB, shooterSide: side });
   const pts = [];
   const n = Math.round((t1 - t0) * fps);
   for (let i = 0; i <= n; i++) {
     const dt = i / fps;
-    const w = { x: x0 + vx * dt, y: y0 + vy * dt - 0.5 * g * dt * dt };
+    const w = { x: x0 + vx * dt + 0.5 * ax * dt * dt, y: y0 + vy * dt - 0.5 * g * dt * dt };
     const p = toPixel(c, w);
     pts.push({ t: t0 + dt, x: p.x, y: p.y });
   }
